@@ -2,6 +2,7 @@ import pygame as pg, sys
 from pygame.locals import *
 import pygamebg as pgbg
 import random as rand
+import keyboard
 
 
 class Block:
@@ -16,7 +17,7 @@ class Block:
             pg.Color("Orange"),
             (
                 self.x * self.size + 10 * self.x,
-                self.y,
+                self.y * self.size + 10 * self.y,
                 self.size,
                 self.size,
             ),
@@ -36,24 +37,21 @@ def generateLayer():
             listOfBlocks.append(block1)
         while True:
             Pos = rand.randint(1, 7)
-            for j in range(numBlocks):
-                if Pos == listOfBlocks[j].x:
+            for j in range(len(listOfBlocks)):
+                if Pos == listOfBlocks[j].x and listOfBlocks[j].y == 0:
                     newNum = 0
             if newNum == 1:
                 listOfBlocks[i].x = Pos
                 break
             newNum = 1
-    for i in range(numBlocks):
-        # pg.draw.rect(
-        #    canvas,
-        #    pg.Color("Orange"),
-        #    (
-        #        BlockPositions[i] * 100 + 10 * BlockPositions[i],
-        #        0,
-        #        Block.size,
-        #        Block.size,
-        #    ),
-        # )
+
+
+def update():
+    if keyboard.is_pressed("n"):
+        for i in range(len(listOfBlocks)):
+            listOfBlocks[i].y += 1
+        generateLayer()
+    for i in range(len(listOfBlocks)):
         listOfBlocks[i].draw()
 
 
@@ -66,6 +64,7 @@ canvas.fill(pg.Color("White"))
 pg.display.set_caption("Hello World!")
 generateLayer()
 while True:  # main game loop
+    update()
     for event in pg.event.get():
         if event.type == QUIT:
             pg.quit()
