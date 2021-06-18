@@ -8,28 +8,53 @@ class Block:
     hp = 5
     x = 0
     y = 0
+    size = 100
+
+    def draw(self):
+        pg.draw.rect(
+            canvas,
+            pg.Color("Orange"),
+            (
+                self.x * self.size + 10 * self.x,
+                self.y,
+                self.size,
+                self.size,
+            ),
+        )
+
+
+listOfBlocks = []
 
 
 def generateLayer():
     newNum = 1
     numBlocks = rand.randint(3, 7)
-    BlockPositions = [0, 0, 0, 0, 0, 0, 0]
+
     for i in range(numBlocks):
+        for k in range(7):
+            block1 = Block()
+            listOfBlocks.append(block1)
         while True:
             Pos = rand.randint(1, 7)
             for j in range(numBlocks):
-                if Pos == BlockPositions[j]:
+                if Pos == listOfBlocks[j].x:
                     newNum = 0
             if newNum == 1:
-                BlockPositions[i] = Pos
+                listOfBlocks[i].x = Pos
                 break
             newNum = 1
     for i in range(numBlocks):
-        pg.draw.rect(
-            canvas,
-            pg.Color("Orange"),
-            (BlockPositions[i] * 100 + 10 * BlockPositions[i], 0, 100, 100),
-        )
+        # pg.draw.rect(
+        #    canvas,
+        #    pg.Color("Orange"),
+        #    (
+        #        BlockPositions[i] * 100 + 10 * BlockPositions[i],
+        #        0,
+        #        Block.size,
+        #        Block.size,
+        #    ),
+        # )
+        listOfBlocks[i].draw()
 
 
 windowWidth = 1000
@@ -41,11 +66,6 @@ canvas.fill(pg.Color("White"))
 pg.display.set_caption("Hello World!")
 generateLayer()
 while True:  # main game loop
-    pg.draw.rect(
-        canvas,
-        pg.Color("Red"),
-        (windowWidth / 2 - 100, windowHeight / 2 - 100, 200, 200),
-    )
     for event in pg.event.get():
         if event.type == QUIT:
             pg.quit()
