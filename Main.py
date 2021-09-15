@@ -7,7 +7,7 @@ import random as rand
 import keyboard
 import math
 
-
+listOfBlocks = []
 cooldown = 300
 turns = 0
 ghostBallz = []
@@ -72,6 +72,8 @@ class Ball:
         global aimer
         global mode
         global ds
+        global listOfBlocks
+
         if mode == 0:
             aimer.update()
 
@@ -81,6 +83,24 @@ class Ball:
             mode = 2
 
         if mode == 2:
+
+            for j in range(len(listOfBlocks)):
+                returnie = ballBlockCollision(
+                    self.x,
+                    self.y,
+                    self.dx,
+                    self.dy,
+                    listOfBlocks[j].x,
+                    listOfBlocks[j].y,
+                    listOfBlocks[j].size,
+                    listOfBlocks[j].size,
+                )
+                if returnie[0] == 1:
+                    self.x = returnie[1]
+                    self.y = returnie[2]
+                    self.dx = returnie[3]
+                    self.dy = returnie[4]
+                    break
 
             self.x = self.x + self.dx
             self.y = self.y + self.dy
@@ -116,7 +136,6 @@ class Block:
         )
 
 
-listOfBlocks = []
 listOfBallz = []
 
 
@@ -152,29 +171,37 @@ def generateLayer():
     numBlocks = rand.randint(3, 5)
 
     for i in range(numBlocks):
-        block1 = Block()
-        listOfBlocks.append(block1)
-        while True:
-            Pos = rand.randint(0, 7)
-            for j in range(len(listOfBlocks)):
-                if Pos == listOfBlocks[j].x and listOfBlocks[j].y == 0:
+        tempBlock = Block()
+        xPos = rand.randint(0, 7)
+        NewBlock = Block()
+
+        # Checking to see if taken
+        if len(listOfBlocks) == 0:
+            listOfBlocks.append(tempBlock)
+            tempBlock.x = 0
+        for j in range(len(listOfBlocks)):
+            while True == True:
+                if listOfBlocks[j].x == xPos and listOfBlocks[j].y == 0:
                     newNum = 0
-            if newNum == 1:
-                listOfBlocks[i].x = Pos
-                break
-            newNum = 1
+                if newNum == 1:
+                    listOfBlocks.append(NewBlock)
+                    NewBlock.x = xPos
+                    break
+            break
 
 
 def update():
     canvas.fill(pg.Color("White"))
     global cooldown
     global turns
+    global mode
     cooldown = cooldown - 1
 
     if keyboard.is_pressed("n") and cooldown < 0:
         for i in range(len(listOfBlocks)):
             listOfBlocks[i].y += 1
         generateLayer()
+        mode = 0
         turns = turns + 1
         cooldown = 300
 
@@ -182,6 +209,7 @@ def update():
         listOfBallz.append(ball1)
         if len(listOfBallz) == 1:
             ball1.needaiming = 1
+
     for i in range(len(listOfBallz)):
         listOfBallz[i].update()
     for i in range(len(listOfBlocks)):
