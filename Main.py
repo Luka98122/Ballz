@@ -1,3 +1,4 @@
+# from _typeshed import Self
 from math import radians, trunc
 import pygame as pg, sys
 from pygame import key
@@ -83,7 +84,6 @@ class Ball:
             mode = 2
 
         if mode == 2:
-
             for j in range(len(listOfBlocks)):
                 returnie = ballBlockCollision(
                     self.x,
@@ -120,7 +120,7 @@ class Ball:
 class Block:
     hp = 5
     x = 0
-    y = 0
+    y = 1
     size = 100
 
     def draw(self):
@@ -136,9 +136,13 @@ class Block:
         )
 
 
+tester = Block()
+tester.x = 3
+tester.y = 4
+listOfBlocks.append(tester)
 listOfBallz = []
 
-
+# Something is wrong here. Blocks are correctly positioned, it is not detecting collision. except for top left corner
 def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY):
     collision = 0
     dx = dx * 0.1
@@ -178,10 +182,10 @@ def generateLayer():
         # Checking to see if taken
         if len(listOfBlocks) == 0:
             listOfBlocks.append(tempBlock)
-            tempBlock.x = 0
+            tempBlock.x = -1
         for j in range(len(listOfBlocks)):
             while True == True:
-                if listOfBlocks[j].x == xPos and listOfBlocks[j].y == 0:
+                if listOfBlocks[j].x == xPos and listOfBlocks[j].y == 1:
                     newNum = 0
                 if newNum == 1:
                     listOfBlocks.append(NewBlock)
@@ -196,6 +200,13 @@ def update():
     global turns
     global mode
     cooldown = cooldown - 1
+
+    for j in range(len(listOfBlocks)):
+        if listOfBlocks[j].y == 8:
+            exit()
+
+    if keyboard.is_pressed("space"):
+        a = 3
 
     if keyboard.is_pressed("n") and cooldown < 0:
         for i in range(len(listOfBlocks)):
