@@ -2,6 +2,7 @@
 from math import radians, trunc
 import pygame as pg, sys
 from pygame import key
+import pygame
 from pygame.locals import *
 import pygamebg as pgbg
 import random as rand
@@ -26,7 +27,7 @@ class Aimer:
         global mode
         global ds
         ds = Ball.angleToDs(self, self.angle)
-        minim = 190
+        minim = 181
         maxim = 350
 
         if keyboard.is_pressed("left arrow"):
@@ -84,23 +85,23 @@ class Ball:
             mode = 2
 
         if mode == 2:
-            for j in range(len(listOfBlocks)):
-                returnie = ballBlockCollision(
-                    self.x,
-                    self.y,
-                    self.dx,
-                    self.dy,
-                    listOfBlocks[j].x,
-                    listOfBlocks[j].y,
-                    listOfBlocks[j].size,
-                    listOfBlocks[j].size,
-                )
-                if returnie[0] == 1:
-                    self.x = returnie[1]
-                    self.y = returnie[2]
-                    self.dx = returnie[3]
-                    self.dy = returnie[4]
-                    break
+            # for j in range(len(listOfBlocks)):
+            # returnie = ballBlockCollision(
+            #    self.x,
+            #    self.y,
+            #    self.dx,
+            #    self.dy,
+            #    listOfBlocks[j].x,
+            #    listOfBlocks[j].y,
+            #    listOfBlocks[j].size,
+            #    listOfBlocks[j].size,
+            # )
+            # if returnie[0] == 1:
+            #    self.x = returnie[1]
+            #    self.y = returnie[2]
+            #    self.dx = returnie[3]
+            #    self.dy = returnie[4]
+            #    break
 
             self.x = self.x + self.dx
             self.y = self.y + self.dy
@@ -159,10 +160,13 @@ def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY):
                 # Ball is to the left of left wall
                 dx = -dx
             if x > rectBX:
+                # Ball is to the right of right wall
                 dx = -dx
             if y < rectTY:
+                # Ball is above the block
                 dy = -dy
             if y > rectBY:
+                # Ball is bellow the block
                 dy = -dy
         # Update ball position for next tick
         x = x + dx
@@ -201,9 +205,9 @@ def update():
     global mode
     cooldown = cooldown - 1
 
-    for j in range(len(listOfBlocks)):
-        if listOfBlocks[j].y == 8:
-            exit()
+    # for j in range(len(listOfBlocks)):
+    # if listOfBlocks[j].y == 8:
+    # exit()
 
     if keyboard.is_pressed("space"):
         a = 3
@@ -221,14 +225,41 @@ def update():
         if len(listOfBallz) == 1:
             ball1.needaiming = 1
 
+    testx = 100
+    testy = 100
+    testx1 = 200
+    testy1 = 200
+
     for i in range(len(listOfBallz)):
         listOfBallz[i].update()
+        u = ballBlockCollision(
+            listOfBallz[i].x,
+            listOfBallz[i].y,
+            listOfBallz[i].dx,
+            listOfBallz[i].dy,
+            testx,
+            testy,
+            testx1,
+            testy1,
+        )
+        # if u[0] == 1:
+        # exit()
     for i in range(len(listOfBlocks)):
         listOfBlocks[i].draw()
     for i in range(len(listOfBallz)):
         listOfBallz[i].draw()
     if mode == 0:
         aimer.draw()
+    pg.draw.rect(
+        canvas,
+        pg.Color("purple"),
+        (
+            testx + 10,
+            testy + 10,
+            100,
+            100,
+        ),
+    )
 
 
 windowWidth = 1000
