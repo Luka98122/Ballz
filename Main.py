@@ -85,23 +85,29 @@ class Ball:
             mode = 2
 
         if mode == 2:
-            # for j in range(len(listOfBlocks)):
-            # returnie = ballBlockCollision(
-            #    self.x,
-            #    self.y,
-            #    self.dx,
-            #    self.dy,
-            #    listOfBlocks[j].x,
-            #    listOfBlocks[j].y,
-            #    listOfBlocks[j].size,
-            #    listOfBlocks[j].size,
-            # )
-            # if returnie[0] == 1:
-            #    self.x = returnie[1]
-            #    self.y = returnie[2]
-            #    self.dx = returnie[3]
-            #    self.dy = returnie[4]
-            #    break
+            for j in range(len(listOfBlocks)):
+                # FIXME: Remove magic value
+                blockTopX = listOfBlocks[j].x * 100 + listOfBlocks[j].offset
+                blockTopY = listOfBlocks[j].y * 100 + listOfBlocks[j].offset
+                blockBottomX = blockTopX + listOfBlocks[j].size
+                blockBottomY = blockTopY + listOfBlocks[j].size
+
+                returnie = ballBlockCollision(
+                    self.x,
+                    self.y,
+                    self.dx,
+                    self.dy,
+                    blockTopX,
+                    blockTopY,
+                    blockBottomX,
+                    blockBottomY,
+                )
+                if returnie[0] == 1:
+                    self.x = returnie[1]
+                    self.y = returnie[2]
+                    self.dx = returnie[3]
+                    self.dy = returnie[4]
+                    break
 
             self.x = self.x + self.dx
             self.y = self.y + self.dy
@@ -123,24 +129,21 @@ class Block:
     x = 0
     y = 1
     size = 100
+    offset = 10
 
     def draw(self):
         pg.draw.rect(
             canvas,
             pg.Color("Orange"),
             (
-                self.x * self.size + 10 * self.x,
-                self.y * self.size + 10 * self.y,
+                self.x * self.size + self.offset * self.x,
+                self.y * self.size + self.offset * self.y,
                 self.size,
                 self.size,
             ),
         )
 
 
-tester = Block()
-tester.x = 3
-tester.y = 4
-listOfBlocks.append(tester)
 listOfBallz = []
 
 # Something is wrong here. Blocks are correctly positioned, it is not detecting collision. except for top left corner
@@ -250,16 +253,6 @@ def update():
         listOfBallz[i].draw()
     if mode == 0:
         aimer.draw()
-    pg.draw.rect(
-        canvas,
-        pg.Color("purple"),
-        (
-            testx + 10,
-            testy + 10,
-            100,
-            100,
-        ),
-    )
 
 
 windowWidth = 1000
