@@ -8,13 +8,17 @@ import pygamebg as pgbg
 import random as rand
 import keyboard
 import math
+import os
 
 listOfBlocks = []
 cooldown = 300
 turns = 0
 ghostBallz = []
-mode = 0
 ds = [5, 5]
+BLOCK_SIZE = 100
+MODE_BOUNCING = 0
+MODE_AIMING = 1
+mode = MODE_BOUNCING
 
 
 class Aimer:
@@ -35,7 +39,8 @@ class Aimer:
         if keyboard.is_pressed("right arrow"):
             self.angle = min(self.angle + 0.1, maxim)
         if keyboard.is_pressed("enter"):
-            mode = 1
+            mode = MODE_BOUNCING
+            return
 
     def draw(self):
         for i in range(16):
@@ -58,7 +63,6 @@ class Ball:
     y = 990
     dx = 0
     dy = 0
-    needaiming = 0
     width = 20
 
     def draw(self):
@@ -72,43 +76,12 @@ class Ball:
 
     def update(self):
         global aimer
-        global mode
         global ds
         global listOfBlocks
-
-        if mode == 0:
+        if mode == MODE_AIMING:
             aimer.update()
 
-        if mode == 1:
-            self.dx = ds[0]
-            self.dy = ds[1]
-            mode = 2
-
-        if mode == 2:
-            for j in range(len(listOfBlocks)):
-                # FIXME: Remove magic value
-                blockTopX = listOfBlocks[j].x * 100 + listOfBlocks[j].offset
-                blockTopY = listOfBlocks[j].y * 100 + listOfBlocks[j].offset
-                blockBottomX = blockTopX + listOfBlocks[j].size
-                blockBottomY = blockTopY + listOfBlocks[j].size
-
-                returnie = ballBlockCollision(
-                    self.x,
-                    self.y,
-                    self.dx,
-                    self.dy,
-                    blockTopX,
-                    blockTopY,
-                    blockBottomX,
-                    blockBottomY,
-                )
-                if returnie[0] == 1:
-                    self.x = returnie[1]
-                    self.y = returnie[2]
-                    self.dx = returnie[3]
-                    self.dy = returnie[4]
-                    break
-
+        if mode == MODE_BOUNCING:
             self.x = self.x + self.dx
             self.y = self.y + self.dy
             if self.x > 990:
@@ -117,6 +90,30 @@ class Ball:
                 self.dx = -self.dx
             if self.y < 10:
                 self.dy = -self.dy
+
+        for j in range(len(listOfBlocks)):
+            # FIXME: Remove magic value
+            blockTopX = listOfBlocks[j].x * BLOCK_SIZE + listOfBlocks[j].offset
+            blockTopY = listOfBlocks[j].y * BLOCK_SIZE + listOfBlocks[j].offset
+            blockBottomX = blockTopX + listOfBlocks[j].size
+            blockBottomY = blockTopY + listOfBlocks[j].size
+            returnie = ballBlockCollision(
+                self.x,
+                self.y,
+                self.dx,
+                self.dy,
+                blockTopX,
+                blockTopY,
+                blockBottomX,
+                blockBottomY,
+            )
+            if returnie[0] == 1:
+                self.x = returnie[1]
+                self.y = returnie[2]
+                self.dx = returnie[3]
+                self.dy = returnie[4]
+                break
+
             # k = ballBlockCollision(self.x, self.y, self.dx, self.dy,)
             # self.x = k[0]
             # self.y = k[1]
@@ -128,7 +125,7 @@ class Block:
     hp = 5
     x = 0
     y = 1
-    size = 100
+    size = BLOCK_SIZE
     offset = 10
 
     def draw(self):
@@ -136,13 +133,18 @@ class Block:
             canvas,
             pg.Color("Orange"),
             (
-                self.x * self.size + self.offset * self.x,
-                self.y * self.size + self.offset * self.y,
+                self.x * (self.size + self.offset),
+                self.y * (self.size + self.offset),
                 self.size,
                 self.size,
             ),
         )
 
+
+Tester = Block()
+Tester.x = 7
+Tester.y = 7
+listOfBlocks.append(Tester)
 
 listOfBallz = []
 
@@ -177,6 +179,15 @@ def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY):
     return (collision, x, y, dx * 10, dy * 10)
 
 
+def CheckToStopBall():
+    for i in range(len(listOfBallz)):
+        if listOfBallz[i].y > windowHeight:
+            listOfBallz[i].dx = 0
+            listOfBallz[i].dy = 0
+            listOfBallz[i].y = windowHeight
+            listOfBallz[i].mode = MODE_AIMING
+
+
 def generateLayer():
     newNum = 1
     numBlocks = rand.randint(3, 5)
@@ -191,9 +202,10 @@ def generateLayer():
             listOfBlocks.append(tempBlock)
             tempBlock.x = -1
         for j in range(len(listOfBlocks)):
-            while True == True:
+            while True:
                 if listOfBlocks[j].x == xPos and listOfBlocks[j].y == 1:
                     newNum = 0
+                    xPos = rand.randint(0, 7)
                 if newNum == 1:
                     listOfBlocks.append(NewBlock)
                     NewBlock.x = xPos
@@ -201,68 +213,54 @@ def generateLayer():
             break
 
 
+ball1 = Ball()
+listOfBallz.append(ball1)
+if len(listOfBallz) == 1:
+    ball1.mode = MODE_AIMING
+
+
 def update():
     canvas.fill(pg.Color("White"))
+    CheckToStopBall()
     global cooldown
     global turns
-    global mode
     cooldown = cooldown - 1
 
     # for j in range(len(listOfBlocks)):
     # if listOfBlocks[j].y == 8:
     # exit()
 
-    if keyboard.is_pressed("space"):
-        a = 3
-
     if keyboard.is_pressed("n") and cooldown < 0:
         for i in range(len(listOfBlocks)):
             listOfBlocks[i].y += 1
         generateLayer()
-        mode = 0
         turns = turns + 1
         cooldown = 300
-
-        ball1 = Ball()
-        listOfBallz.append(ball1)
         if len(listOfBallz) == 1:
-            ball1.needaiming = 1
+            ball1.mode = MODE_AIMING
 
-    testx = 100
-    testy = 100
-    testx1 = 200
-    testy1 = 200
+    if keyboard.is_pressed("esc"):
+        exit()
 
     for i in range(len(listOfBallz)):
         listOfBallz[i].update()
-        u = ballBlockCollision(
-            listOfBallz[i].x,
-            listOfBallz[i].y,
-            listOfBallz[i].dx,
-            listOfBallz[i].dy,
-            testx,
-            testy,
-            testx1,
-            testy1,
-        )
-        # if u[0] == 1:
-        # exit()
     for i in range(len(listOfBlocks)):
         listOfBlocks[i].draw()
     for i in range(len(listOfBallz)):
         listOfBallz[i].draw()
-    if mode == 0:
-        aimer.draw()
+        if listOfBallz[i].mode == MODE_AIMING:
+            aimer.draw()
 
 
 windowWidth = 1000
 windowHeight = 1000
 pg.init()
+os.environ["SDL_VIDEO_WINDOW_POS"] = "200,20"
 DISPLAYSURF = pg.display.set_mode((400, 300))
 canvas = pgbg.open_window(windowWidth, windowHeight, "window.")
 canvas.fill(pg.Color("White"))
 pg.display.set_caption("Hello World!")
-generateLayer()
+# generateLayer()
 while True:  # main game loop
     update()
     for event in pg.event.get():
