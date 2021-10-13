@@ -18,7 +18,9 @@ ds = [5, 5]
 BLOCK_SIZE = 100
 MODE_BOUNCING = 0
 MODE_AIMING = 1
-mode = MODE_BOUNCING
+mode = MODE_AIMING
+windowWidth = 1000
+windowHeight = 1000
 
 
 class Aimer:
@@ -38,21 +40,24 @@ class Aimer:
             self.angle = max(self.angle - 0.1, minim)
         if keyboard.is_pressed("right arrow"):
             self.angle = min(self.angle + 0.1, maxim)
-        if keyboard.is_pressed("enter"):
+        if keyboard.is_pressed("enter") and mode == MODE_AIMING:
             mode = MODE_BOUNCING
+            ds = Ball.angleToDs(self, self.angle)
             return
 
     def draw(self):
-        for i in range(16):
-            pg.draw.circle(
-                canvas,
-                pg.Color("Green"),
-                (
-                    500 + ds[0] * i * self.spaceAimBalls,
-                    1000 + ds[1] * i * self.spaceAimBalls,
-                ),
-                20,
-            )
+        global mode
+        if mode == MODE_AIMING:
+            for i in range(16):
+                pg.draw.circle(
+                    canvas,
+                    pg.Color("Green"),
+                    (
+                        listOfBallz[0].x + ds[0] * i * self.spaceAimBalls,
+                        windowHeight + ds[1] * i * self.spaceAimBalls,
+                    ),
+                    20,
+                )
 
 
 aimer = Aimer()
@@ -78,8 +83,15 @@ class Ball:
         global aimer
         global ds
         global listOfBlocks
+        global mode
+
+        if self.y == 1000:
+            mode = MODE_AIMING
+
         if mode == MODE_AIMING:
             aimer.update()
+            self.dx = ds[0]
+            self.dy = ds[1]
 
         if mode == MODE_BOUNCING:
             self.x = self.x + self.dx
@@ -194,7 +206,7 @@ def generateLayer():
 
     for i in range(numBlocks):
         tempBlock = Block()
-        xPos = rand.randint(0, 7)
+        xPos = rand.randint(0, 8)
         NewBlock = Block()
 
         # Checking to see if taken
@@ -217,6 +229,7 @@ ball1 = Ball()
 listOfBallz.append(ball1)
 if len(listOfBallz) == 1:
     ball1.mode = MODE_AIMING
+    ball1.y = windowHeight - 1
 
 
 def update():
@@ -252,8 +265,6 @@ def update():
             aimer.draw()
 
 
-windowWidth = 1000
-windowHeight = 1000
 pg.init()
 os.environ["SDL_VIDEO_WINDOW_POS"] = "200,20"
 DISPLAYSURF = pg.display.set_mode((400, 300))
