@@ -90,8 +90,8 @@ class Ball:
 
         if mode == MODE_AIMING:
             aimer.update()
-            self.dx = ds[0]
-            self.dy = ds[1]
+            self.dx = ds[0] * 10
+            self.dy = ds[1] * 10
 
         if mode == MODE_BOUNCING:
             self.x = self.x + self.dx
@@ -105,8 +105,8 @@ class Ball:
 
         for j in range(len(listOfBlocks)):
             # FIXME: Remove magic value
-            blockTopX = listOfBlocks[j].x * BLOCK_SIZE + listOfBlocks[j].offset
-            blockTopY = listOfBlocks[j].y * BLOCK_SIZE + listOfBlocks[j].offset
+            blockTopX = listOfBlocks[j].x * BLOCK_SIZE  # + listOfBlocks[j].offset
+            blockTopY = listOfBlocks[j].y * BLOCK_SIZE  # + listOfBlocks[j].offset
             blockBottomX = blockTopX + listOfBlocks[j].size
             blockBottomY = blockTopY + listOfBlocks[j].size
             returnie = ballBlockCollision(
@@ -126,12 +126,6 @@ class Ball:
                 self.dy = returnie[4]
                 break
 
-            # k = ballBlockCollision(self.x, self.y, self.dx, self.dy,)
-            # self.x = k[0]
-            # self.y = k[1]
-            # self.dx = k[2]
-            # self.dy = k[3]
-
 
 class Block:
     hp = 5
@@ -141,6 +135,7 @@ class Block:
     offset = 10
 
     def draw(self):
+
         pg.draw.rect(
             canvas,
             pg.Color("Orange"),
@@ -160,6 +155,11 @@ listOfBlocks.append(Tester)
 
 listOfBallz = []
 
+
+def GridToPixels(x):
+    return x * Block.size
+
+
 # Something is wrong here. Blocks are correctly positioned, it is not detecting collision. except for top left corner
 def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY):
     collision = 0
@@ -169,22 +169,34 @@ def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY):
         # Will the ball end up inside the rect on this tick?
         x1 = x + dx
         y1 = y + dy
-
-        if x1 > rectTX and x1 < rectBX and y1 > rectTY and y1 < rectBY:
+        if keyboard.is_pressed("p"):
+            a = 3
+        if (
+            x1 > rectTX + rectTX / 10
+            and x1 < rectBX + rectBX / 10
+            and y1 > rectTY + rectTY / 10
+            and y1 < rectBY + rectBY / 10
+        ):
+            if keyboard.is_pressed("p"):
+                a = 3
             # In this tick, the ball went from outside to inside
             collision = 1
             if x < rectTX:
                 # Ball is to the left of left wall
                 dx = -dx
+                break
             if x > rectBX:
-                # Ball is to the right of right wall
+                # Ball is to the right of right wallnn
                 dx = -dx
+                break
             if y < rectTY:
                 # Ball is above the block
                 dy = -dy
+                break
             if y > rectBY:
                 # Ball is bellow the block
                 dy = -dy
+                break
         # Update ball position for next tick
         x = x + dx
         y = y + dy
