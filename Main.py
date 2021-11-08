@@ -1,4 +1,3 @@
-# from _typeshed import Self
 from math import radians, trunc
 import pygame as pg, sys
 from pygame import key
@@ -21,7 +20,7 @@ MODE_AIMING = 1
 mode = MODE_AIMING
 windowWidth = 1000
 windowHeight = 1000
-SUBDIVIDE = 1
+SUBDIVIDE = 10
 
 
 class Aimer:
@@ -104,11 +103,15 @@ class Ball:
             if self.y < 10:
                 self.dy = -self.dy
 
+        debugDrawBoundingBoxes = False
+        if keyboard.is_pressed("h"):
+            debugDrawBoundingBoxes = True
+
         for j in range(len(listOfBlocks)):
-            blockTopX = listOfBlocks[j].x * BLOCK_SIZE  # + listOfBlocks[j].offset
-            blockTopY = listOfBlocks[j].y * BLOCK_SIZE  # + listOfBlocks[j].offset
-            blockBottomX = blockTopX + listOfBlocks[j].size
-            blockBottomY = blockTopY + listOfBlocks[j].size
+            collisionBox = listOfBlocks[j].getCollisionBox()
+
+            if debugDrawBoundingBoxes:
+                listOfBlocks[j].drawCb()
 
             # FIXME: Remove magic value
             returnie = ballBlockCollision(
@@ -116,10 +119,7 @@ class Ball:
                 self.y,
                 self.dx,
                 self.dy,
-                blockTopX,
-                blockTopY,
-                blockBottomX,
-                blockBottomY,
+                collisionBox,
                 j,
             )
             if returnie[0] == 1:
@@ -132,25 +132,36 @@ class Ball:
 
 class Block:
     hp = 5
-    x = 0
-    y = 1
-    size = BLOCK_SIZE
-    offset = 10
+    x = 0  # In block units
+    y = 1  # In block units
+    size = BLOCK_SIZE  # In pixels
+    padding = 10  # In pixels
 
-    # def getCollisionBox()
+    # Returns x, y, x1, y1
+    def getCollisionBox(self):
+        return [
+            self.x * self.size,
+            self.y * self.size,
+            (self.x + 1) * self.size,
+            (self.y + 1) * self.size,
+        ]
+
+    # Returns x, y, w, h
+    def getRenderBox(self):
+        return [
+            self.x * self.size + self.padding,
+            self.y * self.size + self.padding,
+            self.size - (self.padding + self.padding),
+            self.size - (self.padding + self.padding),
+        ]
 
     def draw(self):
+        rb = self.getRenderBox()
+        pg.draw.rect(canvas, pg.Color("Orange"), rb)
 
-        pg.draw.rect(
-            canvas,
-            pg.Color("Orange"),
-            (
-                self.x * (self.size + self.offset),
-                self.y * (self.size + self.offset),
-                self.size,
-                self.size,
-            ),
-        )
+    def drawCb(self):
+        cb = self.getCollisionBox()
+        pg.draw.rect(canvas, pg.Color("Magenta"), (cb[0], cb[1], self.size, self.size))
 
 
 Tester = Block()
@@ -166,53 +177,42 @@ def GridToPixels(x):
 
 
 # Something is wrong here. Blocks are correctly positioned, it is not detecting collision. except for top left corner
-def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY, brickNUM):
+def ballBlockCollision(x, y, dx, dy, collisionBox, brickNUM):
     collision = 0
-    #    if x + dx <
+
     dx = dx / SUBDIVIDE
     dy = dy / SUBDIVIDE
+
+    cbx = collisionBox[0]
+    cby = collisionBox[1]
+    cbx1 = collisionBox[2]
+    cby1 = collisionBox[3]
+
     for i in range(SUBDIVIDE):
         # Will the ball end up inside the rect on this tick?
         x1 = x + dx
         y1 = y + dy
-        leftOffset = Block.offset * brickNUM
-        topOffset = Block.offset * brickNUM
+
         if keyboard.is_pressed("p"):
             a = 3
-        if keyboard.is_pressed("h"):
-            pygame.draw.rect(
-                canvas,
-                pygame.Color("Purple"),
-                (
-                    rectTX + leftOffset,
-                    rectTY + leftOffset,
-                    rectBX,
-                    rectBY,
-                ),
-            )
-        if (
-            x1 > rectTX + leftOffset
-            and x1 < rectBX
-            and y1 > rectTY + topOffset
-            and y1 < rectBY
-        ):
+        if x1 > cbx and x1 < cbx1 and y1 > cby and y1 < cby1:
             if keyboard.is_pressed("p"):
                 a = 3
             # In this tick, the ball went from outside to inside
             collision = 1
-            if x < rectTX:
+            if x < cbx:
                 # Ball is to the left of left wall
                 dx = -dx
                 break
-            if x > rectBX:
+            if x > cbx1:
                 # Ball is to the right of right wallnn
                 dx = -dx
                 break
-            if y < rectTY:
+            if y < cby:
                 # Ball is above the block
                 dy = -dy
                 break
-            if y > rectBY:
+            if y > cby1:
                 # Ball is bellow the block
                 dy = -dy
                 break
