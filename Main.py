@@ -21,6 +21,7 @@ MODE_AIMING = 1
 mode = MODE_AIMING
 windowWidth = 1000
 windowHeight = 1000
+SUBDIVIDE = 1
 
 
 class Aimer:
@@ -90,8 +91,8 @@ class Ball:
 
         if mode == MODE_AIMING:
             aimer.update()
-            self.dx = ds[0] * 10
-            self.dy = ds[1] * 10
+            self.dx = ds[0]
+            self.dy = ds[1]
 
         if mode == MODE_BOUNCING:
             self.x = self.x + self.dx
@@ -104,11 +105,12 @@ class Ball:
                 self.dy = -self.dy
 
         for j in range(len(listOfBlocks)):
-            # FIXME: Remove magic value
             blockTopX = listOfBlocks[j].x * BLOCK_SIZE  # + listOfBlocks[j].offset
             blockTopY = listOfBlocks[j].y * BLOCK_SIZE  # + listOfBlocks[j].offset
             blockBottomX = blockTopX + listOfBlocks[j].size
             blockBottomY = blockTopY + listOfBlocks[j].size
+
+            # FIXME: Remove magic value
             returnie = ballBlockCollision(
                 self.x,
                 self.y,
@@ -118,6 +120,7 @@ class Ball:
                 blockTopY,
                 blockBottomX,
                 blockBottomY,
+                j,
             )
             if returnie[0] == 1:
                 self.x = returnie[1]
@@ -133,6 +136,8 @@ class Block:
     y = 1
     size = BLOCK_SIZE
     offset = 10
+
+    # def getCollisionBox()
 
     def draw(self):
 
@@ -161,21 +166,35 @@ def GridToPixels(x):
 
 
 # Something is wrong here. Blocks are correctly positioned, it is not detecting collision. except for top left corner
-def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY):
+def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY, brickNUM):
     collision = 0
-    dx = dx * 0.1
-    dy = dy * 0.1
-    for i in range(10):
+    #    if x + dx <
+    dx = dx / SUBDIVIDE
+    dy = dy / SUBDIVIDE
+    for i in range(SUBDIVIDE):
         # Will the ball end up inside the rect on this tick?
         x1 = x + dx
         y1 = y + dy
+        leftOffset = Block.offset * brickNUM
+        topOffset = Block.offset * brickNUM
         if keyboard.is_pressed("p"):
             a = 3
+        if keyboard.is_pressed("h"):
+            pygame.draw.rect(
+                canvas,
+                pygame.Color("Purple"),
+                (
+                    rectTX + leftOffset,
+                    rectTY + leftOffset,
+                    rectBX,
+                    rectBY,
+                ),
+            )
         if (
-            x1 > rectTX + rectTX / 10
-            and x1 < rectBX + rectBX / 10
-            and y1 > rectTY + rectTY / 10
-            and y1 < rectBY + rectBY / 10
+            x1 > rectTX + leftOffset
+            and x1 < rectBX
+            and y1 > rectTY + topOffset
+            and y1 < rectBY
         ):
             if keyboard.is_pressed("p"):
                 a = 3
@@ -200,7 +219,7 @@ def ballBlockCollision(x, y, dx, dy, rectTX, rectTY, rectBX, rectBY):
         # Update ball position for next tick
         x = x + dx
         y = y + dy
-    return (collision, x, y, dx * 10, dy * 10)
+    return (collision, x, y, dx * SUBDIVIDE, dy * SUBDIVIDE)
 
 
 def CheckToStopBall():
@@ -242,6 +261,12 @@ listOfBallz.append(ball1)
 if len(listOfBallz) == 1:
     ball1.mode = MODE_AIMING
     ball1.y = windowHeight - 1
+
+
+def clearGoneBlocks():
+    for i in range(len(listOfBlocks)):
+        if listOfBlocks[i].y > 9:
+            listOfBlocks.remove[i]
 
 
 def update():
